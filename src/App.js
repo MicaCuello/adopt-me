@@ -5,11 +5,14 @@ import {
   Route,
   NavLink,
 } from "react-router-dom";
-import { FaHome, FaPaw, FaUserMd } from "react-icons/fa"; // Íconos
+import { FaHome, FaPaw, FaSearch } from "react-icons/fa"; // Íconos
+// import { AuthProvider } from "./AuthContext";
 import Mascotas from "./pages/Mascotas";
 import Veterinarias from "./pages/Veterinarias";
 import Login from "./pages/Login";
 import AdminPanel from "./pages/AdminPanel";
+import ReportarPerroPerdido from "./pages/ReportarPerroPerdido";
+import MascotasAdoptadas from "./pages/MascotasAdoptadas";
 
 import "./App.css"; // Archivo CSS para los estilos
 
@@ -20,9 +23,15 @@ function App() {
         <Routes>
           {/* Rutas principales */}
           <Route path="/" element={<Login />} />
-          <Route path="/admin" element={<AdminPanel />} />
-          <Route path="/mascotas" element={<Mascotas />} />
-          <Route path="/veterinarias" element={<Veterinarias />} />
+          {/* <AuthProvider> */}
+            <Route path="/admin" element={<AdminPanel />} />
+            <Route path="/mascotas" element={<Mascotas />} />
+            <Route path="/veterinarias" element={<Veterinarias />} />
+            <Route path="/mascotasAdoptadas" element={<MascotasAdoptadas />} />
+            <Route
+              path="/mascotasPerdidas"element={<ReportarPerroPerdido />}
+            />
+          {/* </AuthProvider> */}
         </Routes>
       </div>
 
@@ -36,9 +45,10 @@ function App() {
           <FaPaw size={24} />
           <span>Mascotas</span>
         </NavLink>
-        <NavLink to="/veterinarias" className="nav-item">
-          <FaUserMd size={24} />
-          <span>Veterinarias</span>
+        {/* Nuevo botón para "Mascotas Perdidas" */}
+        <NavLink to="/mascotasPerdidas" className="nav-item">
+          <FaSearch size={24} />
+          <span>Mascotas Perdidas</span>
         </NavLink>
       </nav>
     </Router>

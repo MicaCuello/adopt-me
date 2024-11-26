@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+// import { useAuth } from "./AuthContext";
 
 function Mascotas() {
   const [mascotas, setMascotas] = useState([]);
@@ -7,6 +8,24 @@ function Mascotas() {
   const [hasMore, setHasMore] = useState(true);
   const [selectedMascota, setSelectedMascota] = useState(null); // Estado para la mascota seleccionada
   const [isModalOpen, setIsModalOpen] = useState(false); // Estado para abrir/cerrar el modal
+  const [usuarioId, setUsuarioId] = useState(null); // Estado para almacenar el ID del usuario
+
+  // Obtener el ID del usuario desde el MockAPI
+  useEffect(() => {
+    const fetchUsuario = async () => {
+      try {
+        const response = await fetch(
+          "https://673102b37aaf2a9aff0f9326.mockapi.io/users/1"
+        ); // Aquí asumo que siempre es el usuario con ID 1
+        const data = await response.json();
+        setUsuarioId(data.id);
+      } catch (error) {
+        console.error("Error al obtener el usuario:", error);
+      }
+    };
+
+    fetchUsuario();
+  }, []);
 
   const fetchMascotas = async () => {
     setLoading(true);
@@ -51,51 +70,46 @@ function Mascotas() {
     setSelectedMascota(null);
   };
 
-// logica adopcion //
+  const handleAdoptar = async () => {
+    if (!usuarioId || !selectedMascota) return;
 
+    // Crear el objeto para el POST
+    const mascotaAdoptada = {
+      idUsuario: usuarioId,
+      idMascota: selectedMascota.id,
+    };
 
-const handleAdoptar = async () => {
-  // Obtener el ID del usuario de la Mokapi
-  const usuarioId = 1; // Asumiendo que el ID del usuario es 1, deberías obtenerlo dinámicamente.
-
-  const mascotaId = selectedMascota.id;
-
-  // Realizar el POST para adoptar
-  try {
-    const response = await fetch(
-      "https://673102b37aaf2a9aff0f9326.mockapi.io/api/usuarioMascota",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          usuarioId,
-          mascotaId,
-        }),
-      }
-    );
-
-    if (response.ok) {
-      // Si la adopción fue exitosa, actualizamos el estado de mascotas
-      alert(`¡Has adoptado a ${selectedMascota.nombre}!`);
-
-      // Eliminamos la mascota adoptada de la lista de mascotas disponibles
-      setMascotas((prevMascotas) =>
-        prevMascotas.filter((mascota) => mascota.id !== mascotaId)
+    try {
+      // Hacer el POST a usuarioMascota
+      const response = await fetch(
+        "https://673102b37aaf2a9aff0f9326.mockapi.io/api/usuarioMascota",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(mascotaAdoptada),
+        }
       );
-      handleCloseModal();
-    } else {
-      alert("Hubo un error al adoptar la mascota. Intenta nuevamente.");
+
+      if (response.ok) {
+        alert(`¡Has adoptado a ${selectedMascota.nombre}!`);
+        handleCloseModal();
+
+        // Actualizar las mascotas para reflejar la adopción (esto puede implicar eliminar la mascota de la lista)
+        setMascotas((prevMascotas) =>
+          prevMascotas.filter((mascota) => mascota.id !== selectedMascota.id)
+        );
+      } else {
+        console.error("Error al adoptar la mascota:", response);
+        alert("Hubo un error al adoptar la mascota.");
+      }
+    } catch (error) {
+      console.error("Error al hacer el POST:", error);
+      alert("Hubo un error al adoptar la mascota.");
     }
-  } catch (error) {
-    console.error("Error al adoptar la mascota:", error);
-    alert("Hubo un error al adoptar la mascota.");
-  }
-};
+  };
 
-
-  // fin de logica de boton
   useEffect(() => {
     fetchMascotas();
   }, [page]);
@@ -230,57 +244,59 @@ const styles = {
   },
   noMascotas: {
     textAlign: "center",
-    color: "#999",
+    fontStyle: "italic",
+    color: "#555",
   },
   noMore: {
     textAlign: "center",
-    color: "#999",
+    color: "#aaa",
   },
   modalOverlay: {
     position: "fixed",
-    top: "0",
-    left: "0",
+    top: 0,
+    left: 0,
     width: "100%",
     height: "100%",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
     display: "flex",
     justifyContent: "center",
     alignItems: "center",
+    zIndex: 1000,
   },
   modal: {
     backgroundColor: "#fff",
     padding: "20px",
     borderRadius: "8px",
-    maxWidth: "500px",
-    width: "100%",
-    boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+    maxWidth: "400px",
+    textAlign: "center",
+    boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+    position: "relative",
   },
   modalImage: {
     width: "100%",
     height: "200px",
     objectFit: "cover",
     borderRadius: "8px",
+    marginBottom: "10px",
   },
   adoptButton: {
-    backgroundColor: "#4caf50",
-    color: "white",
+    backgroundColor: "#28a745",
+    color: "#fff",
     padding: "10px 20px",
     border: "none",
     borderRadius: "5px",
     cursor: "pointer",
-    fontSize: "16px",
-    marginTop: "10px",
+    fontSize: "1.2rem",
+    margin: "10px 0",
   },
   closeButton: {
     backgroundColor: "#ccc",
-    color: "black",
+    color: "#333",
     padding: "10px 20px",
     border: "none",
     borderRadius: "5px",
     cursor: "pointer",
-    fontSize: "16px",
-    marginTop: "10px",
-    marginLeft: "10px",
+    fontSize: "1rem",
   },
 };
 

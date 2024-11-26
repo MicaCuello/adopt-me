@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import EditarDatosUsuario from "./EditarDatosUsuario"; // Importamos el componente de edición
+import AdminPanel from "./AdminPanel";
 
 // API_URL para las solicitudes
 const API_URL = "https://673102b37aaf2a9aff0f9326.mockapi.io/users";
@@ -23,6 +24,36 @@ export default function Login() {
       setIsAdmin(adminStatus === "true");
       setUsuario(usuarioName); // Establecer el nombre de usuario desde el localStorage
     }
+
+    // Comprobamos si ya existe un usuario administrador
+    const checkAdmin = async () => {
+      try {
+        const response = await fetch(API_URL);
+        const data = await response.json();
+        const adminExist = data.some((u) => u.isAdmin === true);
+
+        // Si no hay ningún administrador, creamos uno por defecto
+        if (!adminExist) {
+          const defaultAdmin = {
+            usuario: "admin", // Nombre del usuario administrador
+            email: "admin@example.com", // Correo electrónico del administrador
+            password: "admin123", // Contraseña del administrador
+            isAdmin: true, // Establecemos que es un administrador
+          };
+
+          await fetch(API_URL, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(defaultAdmin),
+          });
+          console.log("Usuario administrador creado");
+        }
+      } catch (error) {
+        console.error("Error al verificar el administrador", error);
+      }
+    };
+
+    checkAdmin(); // Llamada para verificar o crear el admin
   }, []);
 
   const handleLogin = async () => {
@@ -115,18 +146,23 @@ export default function Login() {
   };
 
   return (
-    <div style={{ padding: "20px" }}>
+    <div style={styles.container}>
       {isLoggedIn ? (
-        <div>
+        <div style={styles.loggedInContainer}>
           <h2>Bienvenido, {usuario}</h2>
           {isAdmin ? (
             <p>Eres administrador. Puedes gestionar usuarios.</p>
           ) : (
-            <p>Eres un usuario normal. Solo puedes actualizar tus datos.</p>
+            <p>Aqui puedes actualizar tus datos.</p>
           )}
-          <button onClick={handleLogout}>Cerrar sesión</button>
+          <button onClick={handleLogout} style={styles.button}>
+            Cerrar sesión
+          </button>
           {isAdmin ? (
-            <a href="/admin.html">Ir a gestión de usuarios</a>
+            <div>
+              <h3>Lista Usuarios</h3>
+              <AdminPanel userId={userId} onSave={handleLogout} />
+            </div>
           ) : (
             <div>
               <h3>Mis Datos</h3>
@@ -135,13 +171,14 @@ export default function Login() {
           )}
         </div>
       ) : (
-        <div>
+        <div style={styles.formContainer}>
           <h2>{esLogin ? "Iniciar sesión" : "Registrarse"}</h2>
           <input
             type="text"
             placeholder="Usuario"
             value={usuario}
             onChange={(e) => setUsuario(e.target.value)}
+            style={styles.input}
           />
           {!esLogin && (
             <input
@@ -149,6 +186,7 @@ export default function Login() {
               placeholder="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              style={styles.input}
             />
           )}
           <input
@@ -156,15 +194,21 @@ export default function Login() {
             placeholder="Contraseña"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            style={styles.input}
           />
-          <button onClick={esLogin ? handleLogin : handleRegister}>
+          <button
+            onClick={esLogin ? handleLogin : handleRegister}
+            style={styles.button}
+          >
             {esLogin ? "Login" : "Registrarse"}
           </button>
-          <button onClick={toggleMode}>
-            {esLogin
-              ? "¿No tienes cuenta? Regístrate"
-              : "¿Ya tienes cuenta? Login"}
-          </button>
+          <div style={styles.switchContainer}>
+            <button onClick={toggleMode} style={styles.switchButton}>
+              {esLogin
+                ? "¿No tienes cuenta? Regístrate"
+                : "¿Ya tienes cuenta? Login"}
+            </button>
+          </div>
         </div>
       )}
     </div>
@@ -175,56 +219,61 @@ const styles = {
   container: {
     display: "flex",
     flexDirection: "column",
-    justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f0f8ff",
+    justifyContent: "center",
     padding: "20px",
+    backgroundColor: "#f0f8ff",
+    height: "100vh",
+  },
+  loggedInContainer: {
+    textAlign: "center",
+    maxWidth: "400px",
+    padding: "20px",
+    backgroundColor: "#fff",
+    borderRadius: "10px",
+    boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
+  },
+  formContainer: {
+    textAlign: "center",
+    maxWidth: "400px",
+    padding: "20px",
+    backgroundColor: "#fff",
+    borderRadius: "10px",
+    boxShadow: "0 4px 10px rgba(0, 0, 0, 0.1)",
   },
   input: {
-    height: "40px",
     width: "100%",
-    border: "1px solid #ccc",
-    marginBottom: "10px",
     padding: "10px",
-    borderRadius: "8px",
-    backgroundColor: "#ffffff",
-  },
-  title: {
-    fontSize: "28px",
-    fontWeight: "bold",
-    color: "#2f3640",
-    marginBottom: "30px",
+    margin: "10px 0",
+    borderRadius: "5px",
+    border: "1px solid #ccc",
   },
   button: {
-    height: "40px",
-    width: "100%",
-    backgroundColor: "#2f3640",
-    color: "#fff",
-    border: "none",
+    backgroundColor: "#4CAF50",
+    color: "white",
+    padding: "15px 20px",
+    textAlign: "center",
+    textDecoration: "none",
+    display: "inline-block",
+    fontSize: "16px",
     borderRadius: "5px",
     cursor: "pointer",
-    fontWeight: "bold",
-  },
-  validationText: {
-    fontSize: "14px",
-    marginTop: "5px",
-  },
-  validationContainer: {
-    marginBottom: "20px",
-  },
-  register: {
-    marginTop: "20px",
+    margin: "10px 0",
   },
   switchContainer: {
-    display: "flex",
-    alignItems: "center",
-    marginTop: "15px",
+    marginTop: "10px",
   },
-  switchText: {
-    fontSize: "16px",
-    marginRight: "10px",
+  switchButton: {
+    backgroundColor: "transparent",
+    border: "none",
+    color: "#007BFF",
+    fontSize: "14px",
+    cursor: "pointer",
   },
-  logout: {
-    marginTop: "20px",
+  link: {
+    color: "#007BFF",
+    textDecoration: "none",
+    marginTop: "10px",
+    display: "inline-block",
   },
 };
