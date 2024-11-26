@@ -5,10 +5,11 @@ import {
   Route,
   NavLink,
 } from "react-router-dom";
-import { FaHome, FaSignInAlt, FaPaw, FaUserMd } from "react-icons/fa"; // Íconos
-import Home from "./pages/Home";
+import { FaHome, FaPaw, FaUserMd } from "react-icons/fa"; // Íconos
 import Mascotas from "./pages/Mascotas";
 import Veterinarias from "./pages/Veterinarias";
+import Login from "./pages/Login";
+import AdminPanel from "./pages/AdminPanel";
 
 import "./App.css"; // Archivo CSS para los estilos
 
@@ -17,7 +18,9 @@ function App() {
     <Router>
       <div className="content">
         <Routes>
-          <Route path="/" element={<Home />} />
+          {/* Rutas principales */}
+          <Route path="/" element={<Login />} />
+          <Route path="/admin" element={<AdminPanel />} />
           <Route path="/mascotas" element={<Mascotas />} />
           <Route path="/veterinarias" element={<Veterinarias />} />
         </Routes>
