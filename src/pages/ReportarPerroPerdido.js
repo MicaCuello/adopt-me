@@ -1,40 +1,45 @@
 import React, { useState, useRef, useEffect } from "react";
 
-function ReportarPerroPerdido({ userId, isLoggedIn, USER_API_URL }) {
-  const [nombre, setNombre] = useState("");
-  const [descripcion, setDescripcion] = useState("");
+function ReportarPerroPerdido({ userId, USER_API_URL }) {
+  const [usuario, setUsuario] = useState("");
   const [ubicacion, setUbicacion] = useState("");
-  const [contactame, setContactame] = useState("");
+  const [contacto, setContacto] = useState("");
   const [imagenSeleccionada, setImagenSeleccionada] = useState(null);
   const [imagenCapturada, setImagenCapturada] = useState(null);
+  const [detalles, setDetalles] = useState("");
   const [error, setError] = useState("");
+  const [usuarioValido, setUsuarioValido] = useState(false);
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
 
   const API_URL =
-    "https://6745c2c5512ddbd807f9876d.mockapi.io/mascotasPerdidas/mascotasPerdidas";
+    "https://6745c2c5512ddbd807f9876d.mockapi.io/mascotasPerdidas/mascotas";
+  const USERS_API_URL = "https://673102b37aaf2a9aff0f9326.mockapi.io/users";
+
+  const validarUsuario = async () => {
+    try {
+      const response = await fetch(USERS_API_URL);
+      const users = await response.json();
+      const usuarioExistente = users.find((user) => user.usuario === usuario);
+      if (usuarioExistente) {
+        setUsuarioValido(true);
+      } else {
+        setUsuarioValido(false);
+        setError("El nombre de usuario no existe.");
+      }
+    } catch (error) {
+      console.error("Error al validar el usuario:", error);
+      setError("Hubo un error al verificar el nombre de usuario.");
+    }
+  };
 
   useEffect(() => {
-    if (isLoggedIn) {
-      const fetchUserData = async () => {
-        try {
-          const response = await fetch(`${USER_API_URL}/${userId}`);
-          if (response.ok) {
-            const user = await response.json();
-            setNombre(user.usuario); // Establecemos el nombre del usuario logueado
-          } else {
-            setError("No se pudo obtener el usuario logueado.");
-          }
-        } catch (error) {
-          setError("Error al obtener los datos del usuario.");
-        }
-      };
-
-      fetchUserData();
+    if (usuario) {
+      validarUsuario();
     } else {
-      setError("Debes loguearte para poder realizar un reporte.");
+      setUsuarioValido(false);
     }
-  }, [userId, isLoggedIn, USER_API_URL]);
+  }, [usuario]);
 
   useEffect(() => {
     const activarCamara = async () => {
@@ -60,29 +65,21 @@ function ReportarPerroPerdido({ userId, isLoggedIn, USER_API_URL }) {
     };
   }, []);
 
-  const manejarCambioImagen = (e) => {
-    const archivo = e.target.files[0];
-    if (archivo) {
-      const urlImagen = URL.createObjectURL(archivo);
-      setImagenSeleccionada(urlImagen);
-    }
-  };
-
+  // Función para capturar la foto desde el video
   const capturarFoto = () => {
     const canvas = canvasRef.current;
     const video = videoRef.current;
-    if (canvas && video) {
-      const contexto = canvas.getContext("2d");
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      contexto.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imagenData = canvas.toDataURL("image/png");
-      setImagenCapturada(imagenData);
-    }
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const context = canvas.getContext("2d");
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imagenBase64 = canvas.toDataURL("image/jpeg");
+    setImagenCapturada(imagenBase64); // Guardamos la imagen en formato base64
   };
 
   const manejarEnvio = async (e) => {
     e.preventDefault();
+
     const imagenFinal = imagenCapturada || imagenSeleccionada;
     if (!imagenFinal) {
       alert("Por favor, sube o captura una imagen.");
@@ -90,11 +87,12 @@ function ReportarPerroPerdido({ userId, isLoggedIn, USER_API_URL }) {
     }
 
     const datos = {
-      userName: nombre,
-      ubicacion,
-      foto: imagenFinal,
-      descripcion,
-      contactame,
+      Usuario: usuario,
+      Ubicacion: ubicacion,
+      Contacto: contacto,
+      Imagen: imagenFinal, // Enviamos la imagen como string base64
+      Detalles: detalles,
+      id: String(Date.now()), // Usamos la fecha actual como id único
     };
 
     try {
@@ -108,9 +106,9 @@ function ReportarPerroPerdido({ userId, isLoggedIn, USER_API_URL }) {
 
       if (respuesta.ok) {
         alert("¡Reporte enviado exitosamente!");
-        setDescripcion("");
+        setDetalles("");
         setUbicacion("");
-        setContactame("");
+        setContacto("");
         setImagenSeleccionada(null);
         setImagenCapturada(null);
       } else {
@@ -122,149 +120,171 @@ function ReportarPerroPerdido({ userId, isLoggedIn, USER_API_URL }) {
     }
   };
 
-  const estilosContenedor = {
-    padding: "20px",
-    maxWidth: "600px",
-    margin: "0 auto",
-    backgroundColor: "#f9f9f9",
-    borderRadius: "10px",
-    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-    fontFamily: "Arial, sans-serif",
-  };
-
-  const estilosTitulo = {
-    textAlign: "center",
-    color: "#333",
-    marginBottom: "20px",
-  };
-
-  const estilosFormulario = {
-    display: "flex",
-    flexDirection: "column",
-    gap: "15px",
-  };
-
-  const estilosCampo = {
-    display: "flex",
-    flexDirection: "column",
-  };
-
-  const estilosLabel = {
-    fontWeight: "bold",
-    marginBottom: "5px",
-  };
-
-  const estilosInput = {
-    padding: "10px",
-    borderRadius: "5px",
-    border: "1px solid #ccc",
-  };
-
-  const estilosBoton = {
-    padding: "10px 20px",
-    borderRadius: "5px",
-    border: "none",
-    backgroundColor: "#007bff",
-    color: "#fff",
-    fontWeight: "bold",
-    cursor: "pointer",
-    alignSelf: "center",
-  };
-
-  const estilosImagen = {
-    width: "100%",
-    maxWidth: "500px",
-    borderRadius: "5px",
-    marginTop: "10px",
-  };
-
   return (
-    <div style={estilosContenedor}>
-      <h2 style={estilosTitulo}>Reportar Perro Perdido</h2>
+    <div
+      style={{
+        padding: "20px",
+        maxWidth: "600px",
+        margin: "0 auto",
+        backgroundColor: "#f9f9f9",
+        borderRadius: "10px",
+        boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+        fontFamily: "Arial, sans-serif",
+      }}
+    >
+      <h2 style={{ textAlign: "center", color: "#333", marginBottom: "20px" }}>
+        Reportar Perro Perdido
+      </h2>
       {error ? (
         <p style={{ color: "red", textAlign: "center" }}>{error}</p>
       ) : (
-        <form onSubmit={manejarEnvio} style={estilosFormulario}>
-          <div style={estilosCampo}>
-            <label style={estilosLabel}>Nombre del Usuario:</label>
+        <form
+          onSubmit={manejarEnvio}
+          style={{ display: "flex", flexDirection: "column", gap: "15px" }}
+        >
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <label style={{ fontWeight: "bold", marginBottom: "5px" }}>
+              Nombre del Usuario:
+            </label>
             <input
               type="text"
-              value={nombre}
-              readOnly
+              value={usuario}
+              onChange={(e) => setUsuario(e.target.value)}
               style={{
-                ...estilosInput,
-                backgroundColor: "#e9ecef",
-                cursor: "not-allowed",
+                padding: "10px",
+                borderRadius: "5px",
+                border: "1px solid #ccc",
               }}
+              required
             />
           </div>
-          <div style={estilosCampo}>
-            <label style={estilosLabel}>Ubicación:</label>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <label style={{ fontWeight: "bold", marginBottom: "5px" }}>
+              Ubicación:
+            </label>
             <input
               type="text"
               value={ubicacion}
               onChange={(e) => setUbicacion(e.target.value)}
-              style={estilosInput}
+              style={{
+                padding: "10px",
+                borderRadius: "5px",
+                border: "1px solid #ccc",
+              }}
               required
+              disabled={!usuarioValido}
             />
           </div>
-          <div style={estilosCampo}>
-            <label style={estilosLabel}>Contacto:</label>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <label style={{ fontWeight: "bold", marginBottom: "5px" }}>
+              Contacto:
+            </label>
             <input
               type="text"
-              value={contactame}
-              onChange={(e) => setContactame(e.target.value)}
-              style={estilosInput}
+              value={contacto}
+              onChange={(e) => setContacto(e.target.value)}
+              style={{
+                padding: "10px",
+                borderRadius: "5px",
+                border: "1px solid #ccc",
+              }}
               required
+              disabled={!usuarioValido}
             />
           </div>
-          <div style={estilosCampo}>
-            <label style={estilosLabel}>Descripción:</label>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <label style={{ fontWeight: "bold", marginBottom: "5px" }}>
+              Descripción:
+            </label>
             <textarea
-              value={descripcion}
-              onChange={(e) => setDescripcion(e.target.value)}
-              style={{ ...estilosInput, height: "80px", resize: "none" }}
+              value={detalles}
+              onChange={(e) => setDetalles(e.target.value)}
+              style={{
+                padding: "10px",
+                borderRadius: "5px",
+                border: "1px solid #ccc",
+                height: "80px",
+                resize: "none",
+              }}
               required
+              disabled={!usuarioValido}
             ></textarea>
           </div>
-          <div style={estilosCampo}>
-            <label style={estilosLabel}>Subir Foto:</label>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <label style={{ fontWeight: "bold", marginBottom: "5px" }}>
+              Subir Foto:
+            </label>
             <input
               type="file"
               accept="image/*"
-              onChange={manejarCambioImagen}
-              style={estilosInput}
+              onChange={(e) =>
+                setImagenSeleccionada(URL.createObjectURL(e.target.files[0]))
+              }
+              style={{
+                padding: "10px",
+                borderRadius: "5px",
+                border: "1px solid #ccc",
+              }}
+              disabled={!usuarioValido}
             />
           </div>
-          <div style={estilosCampo}>
-            <label style={estilosLabel}>O Capturar Foto:</label>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            <label style={{ fontWeight: "bold", marginBottom: "5px" }}>
+              O Capturar Foto:
+            </label>
             <video
               ref={videoRef}
               autoPlay
               style={{ width: "100%", maxWidth: "500px" }}
             />
             <canvas ref={canvasRef} style={{ display: "none" }}></canvas>
-            <button type="button" onClick={capturarFoto} style={estilosBoton}>
+            <button
+              type="button"
+              onClick={capturarFoto}
+              style={{
+                padding: "10px 20px",
+                borderRadius: "5px",
+                border: "none",
+                backgroundColor: "#007bff",
+                color: "#fff",
+                fontWeight: "bold",
+                cursor: "pointer",
+                alignSelf: "center",
+              }}
+              disabled={!usuarioValido}
+            >
               Capturar Foto
             </button>
+            {imagenCapturada && (
+              <img
+                src={imagenCapturada}
+                alt="Imagen capturada"
+                style={{
+                  width: "100%",
+                  maxWidth: "500px",
+                  borderRadius: "5px",
+                  marginTop: "10px",
+                }}
+              />
+            )}
           </div>
-          {imagenSeleccionada && (
-            <img
-              src={imagenSeleccionada}
-              alt="Imagen seleccionada"
-              style={estilosImagen}
-            />
-          )}
-          {imagenCapturada && (
-            <img
-              src={imagenCapturada}
-              alt="Imagen capturada"
-              style={estilosImagen}
-            />
-          )}
-          <button type="submit" style={estilosBoton}>
-            Enviar Reporte
-          </button>
+          <div style={{ textAlign: "center" }}>
+            <button
+              type="submit"
+              style={{
+                padding: "10px 20px",
+                borderRadius: "5px",
+                border: "none",
+                backgroundColor: "#28a745",
+                color: "#fff",
+                fontWeight: "bold",
+                cursor: "pointer",
+              }}
+              disabled={!usuarioValido}
+            >
+              Enviar Reporte
+            </button>
+          </div>
         </form>
       )}
     </div>

@@ -13,6 +13,7 @@ import Login from "./pages/Login";
 import AdminPanel from "./pages/AdminPanel";
 import ReportarPerroPerdido from "./pages/ReportarPerroPerdido";
 import MascotasAdoptadas from "./pages/MascotasAdoptadas";
+import ListaPerrosPerdidos from "./pages/ListaPerrosPerdidos";
 
 import "./App.css"; // Archivo CSS para los estilos
 
@@ -24,13 +25,13 @@ function App() {
           {/* Rutas principales */}
           <Route path="/" element={<Login />} />
           {/* <AuthProvider> */}
-            <Route path="/admin" element={<AdminPanel />} />
-            <Route path="/mascotas" element={<Mascotas />} />
-            <Route path="/veterinarias" element={<Veterinarias />} />
-            <Route path="/mascotasAdoptadas" element={<MascotasAdoptadas />} />
-            <Route
-              path="/mascotasPerdidas"element={<ReportarPerroPerdido />}
-            />
+          <Route path="/admin" element={<AdminPanel />} />
+          <Route path="/mascotas" element={<Mascotas />} />
+          <Route path="/veterinarias" element={<Veterinarias />} />
+          <Route path="/mascotasAdoptadas" element={<MascotasAdoptadas />} />
+          <Route path="/reportar" element={<ReportarPerroPerdido />} />
+          <Route path="/mascotasPerdidas" element={<ReportarPerroPerdido />} />
+          <Route path="/listaperdidos" element={<ListaPerrosPerdidos />} />
           {/* </AuthProvider> */}
         </Routes>
       </div>
@@ -46,7 +47,7 @@ function App() {
           <span>Mascotas</span>
         </NavLink>
         {/* Nuevo botón para "Mascotas Perdidas" */}
-        <NavLink to="/mascotasPerdidas" className="nav-item">
+        <NavLink to="/listaperdidos" className="nav-item">
           <FaSearch size={24} />
           <span>Mascotas Perdidas</span>
         </NavLink>
